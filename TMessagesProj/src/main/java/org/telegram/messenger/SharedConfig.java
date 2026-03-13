@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class SharedConfig {
+    public static final boolean CHANNELS_ENABLED = false;
     /**
      * V2: Ping and check time serialized
      */

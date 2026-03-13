@@ -33,6 +33,7 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
@@ -934,14 +935,16 @@ public class UserInfoActivity extends UniversalFragment implements NotificationC
                 finishFragment();
             } else if (item.id == BUTTON_CREATE) {
                 invalidateAfterPause = true;
-                SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-                if (!BuildVars.DEBUG_VERSION && preferences.getBoolean("channel_intro", false)) {
-                    Bundle args = new Bundle();
-                    args.putInt("step", 0);
-                    presentFragment(new ChannelCreateActivity(args));
-                } else {
-                    presentFragment(new ActionIntroActivity(ActionIntroActivity.ACTION_TYPE_CHANNEL_CREATE));
-                    preferences.edit().putBoolean("channel_intro", true).apply();
+                if (SharedConfig.CHANNELS_ENABLED) {
+                    SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+                    if (!BuildVars.DEBUG_VERSION && preferences.getBoolean("channel_intro", false)) {
+                        Bundle args = new Bundle();
+                        args.putInt("step", 0);
+                        presentFragment(new ChannelCreateActivity(args));
+                    } else {
+                        presentFragment(new ActionIntroActivity(ActionIntroActivity.ACTION_TYPE_CHANNEL_CREATE));
+                        preferences.edit().putBoolean("channel_intro", true).apply();
+                    }
                 }
             } else if (item.viewType == UniversalAdapter.VIEW_TYPE_FILTER_CHAT_CHECK) {
                 finishFragment();
