@@ -412,7 +412,7 @@ public class ChatObject {
             TLRPC.Chat chat = currentAccount.getMessagesController().getChat(chatId);
             selfDummyParticipant.can_self_unmute = !call.join_muted || ChatObject.canManageCalls(chat);
             selfDummyParticipant.date = currentAccount.getConnectionsManager().getCurrentTime();
-            if (ChatObject.canManageCalls(chat) || !ChatObject.isChannel(chat) || chat.megagroup || selfDummyParticipant.can_self_unmute) {
+            if (ChatObject.canManageCalls(chat) || !SharedConfig.CHANNELS_ENABLED || !ChatObject.isChannel(chat) || chat.megagroup || selfDummyParticipant.can_self_unmute) {
                 selfDummyParticipant.active_date = currentAccount.getConnectionsManager().getCurrentTime();
             }
             if (selfId > 0) {
@@ -682,7 +682,7 @@ public class ChatObject {
                     } else {
                         TLRPC.Chat chat = currentAccount.getMessagesController().getChat(-uid);
                         TLRPC.InputPeer inputPeer;
-                        if (chat == null || ChatObject.isChannel(chat)) {
+                        if (chat == null || (SharedConfig.CHANNELS_ENABLED && ChatObject.isChannel(chat))) {
                             inputPeer = new TLRPC.TL_inputPeerChannel();
                             inputPeer.channel_id = -uid;
                         } else {
@@ -1945,23 +1945,23 @@ public class ChatObject {
     }
 
     public static boolean canSendAsPeers(TLRPC.Chat chat) {
-        return ChatObject.isChannel(chat) && (!chat.megagroup && chat.signatures && ChatObject.hasAdminRights(chat) && ChatObject.canWriteToChat(chat) || chat.megagroup && (ChatObject.isPublic(chat) || chat.has_geo || chat.has_link));
+        return SharedConfig.CHANNELS_ENABLED && ChatObject.isChannel(chat) && (!chat.megagroup && chat.signatures && ChatObject.hasAdminRights(chat) && ChatObject.canWriteToChat(chat) || chat.megagroup && (ChatObject.isPublic(chat) || chat.has_geo || chat.has_link));
     }
 
     public static boolean isChannel(TLRPC.Chat chat) {
-        return chat instanceof TLRPC.TL_channel || chat instanceof TLRPC.TL_channelForbidden;
+        return SharedConfig.CHANNELS_ENABLED && (chat instanceof TLRPC.TL_channel || chat instanceof TLRPC.TL_channelForbidden);
     }
 
     public static boolean isChannelOrGiga(TLRPC.Chat chat) {
-        return (chat instanceof TLRPC.TL_channel || chat instanceof TLRPC.TL_channelForbidden) && (!chat.megagroup || chat.gigagroup);
+        return SharedConfig.CHANNELS_ENABLED && (chat instanceof TLRPC.TL_channel || chat instanceof TLRPC.TL_channelForbidden) && (!chat.megagroup || chat.gigagroup);
     }
 
     public static boolean isMegagroup(TLRPC.Chat chat) {
-        return (chat instanceof TLRPC.TL_channel || chat instanceof TLRPC.TL_channelForbidden) && chat.megagroup;
+        return SharedConfig.CHANNELS_ENABLED && (chat instanceof TLRPC.TL_channel || chat instanceof TLRPC.TL_channelForbidden) && chat.megagroup;
     }
 
     public static boolean isChannelAndNotMegaGroup(TLRPC.Chat chat) {
-        return isChannel(chat) && !isMegagroup(chat);
+        return SharedConfig.CHANNELS_ENABLED && isChannel(chat) && !isMegagroup(chat);
     }
 
     public static boolean isDiscussionGroup(int currentAccount, long chatId) {
@@ -1974,7 +1974,7 @@ public class ChatObject {
     }
 
     public static boolean isBoostSupported(TLRPC.Chat chat) {
-        return (isChannelAndNotMegaGroup(chat) || isMegagroup(chat)) && !isMonoForum(chat) && !false;
+        return SharedConfig.CHANNELS_ENABLED && (isChannelAndNotMegaGroup(chat) || isMegagroup(chat)) && !isMonoForum(chat) && !false;
     }
 
     public static boolean isBoosted(TLRPC.ChatFull chatFull) {
@@ -1995,7 +1995,7 @@ public class ChatObject {
 
     public static boolean isMegagroup(int currentAccount, long chatId) {
         TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(chatId);
-        return ChatObject.isChannel(chat) && chat.megagroup;
+        return SharedConfig.CHANNELS_ENABLED && ChatObject.isChannel(chat) && chat.megagroup;
     }
 
     public static boolean hasAdminRights(TLRPC.Chat chat) {
@@ -2150,7 +2150,7 @@ public class ChatObject {
     }
 
     public static boolean canAddBotsToChat(TLRPC.Chat chat) {
-        if (isChannel(chat)) {
+        if (SharedConfig.CHANNELS_ENABLED && isChannel(chat)) {
             if (chat.megagroup && (chat.admin_rights != null && (chat.admin_rights.post_messages || chat.admin_rights.add_admins) || chat.creator)) {
                 return true;
             }
@@ -2163,7 +2163,7 @@ public class ChatObject {
     }
 
     public static boolean canPinMessages(TLRPC.Chat chat) {
-        return (canUserDoAction(chat, ACTION_PIN) || ChatObject.isChannel(chat) && !chat.megagroup && chat.admin_rights != null && chat.admin_rights.edit_messages);
+        return (canUserDoAction(chat, ACTION_PIN) || SharedConfig.CHANNELS_ENABLED && ChatObject.isChannel(chat) && !chat.megagroup && chat.admin_rights != null && chat.admin_rights.edit_messages);
     }
 
     public static boolean canCreateTopic(TLRPC.Chat chat) {
@@ -2209,22 +2209,25 @@ public class ChatObject {
     }
 
     public static boolean isChannel(long chatId, int currentAccount) {
+        if (!SharedConfig.CHANNELS_ENABLED) return false;
         TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(chatId);
         return chat instanceof TLRPC.TL_channel || chat instanceof TLRPC.TL_channelForbidden;
     }
 
     public static boolean isChannelAndNotMegaGroup(long chatId, int currentAccount) {
+        if (!SharedConfig.CHANNELS_ENABLED) return false;
         TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(chatId);
         return isChannelAndNotMegaGroup(chat);
     }
 
     public static boolean isCanWriteToChannel(long chatId, int currentAccount) {
+        if (!SharedConfig.CHANNELS_ENABLED) return false;
         TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(chatId);
         return ChatObject.canSendMessages(chat) || chat.megagroup;
     }
 
     public static boolean canWriteToChat(TLRPC.Chat chat) {
-        return !isChannel(chat) || chat.creator || chat.admin_rights != null && chat.admin_rights.post_messages || !chat.broadcast && !chat.gigagroup || chat.gigagroup && ChatObject.hasAdminRights(chat);
+        return !SharedConfig.CHANNELS_ENABLED || !isChannel(chat) || chat.creator || chat.admin_rights != null && chat.admin_rights.post_messages || !chat.broadcast && !chat.gigagroup || chat.gigagroup && ChatObject.hasAdminRights(chat);
     }
 
     public static String getBannedRightsString(TLRPC.TL_chatBannedRights bannedRights) {

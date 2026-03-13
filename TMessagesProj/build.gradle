@@ -2,6 +2,12 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 apply plugin: 'com.android.library'
 
+def secretsFile = rootProject.file('local.properties')
+def secrets = new Properties()
+if (secretsFile.exists()) {
+    secrets.load(new FileInputStream(secretsFile))
+}
+
 repositories {
     mavenCentral()
     google()
@@ -107,10 +113,24 @@ android {
 
         multiDexEnabled true
 
+        buildConfigField "int", "APP_ID", secrets.getProperty('TELEGRAM_API_ID', '0')
+        buildConfigField "String", "APP_HASH", "\"${secrets.getProperty('TELEGRAM_API_HASH', '')}\""
+
         externalNativeBuild {
             cmake {
                 version '3.10.2'
                 arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21' //, '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
+            }
+        }
+    }
+
+    if (secrets.getProperty('RELEASE_KEYSTORE_PATH')) {
+        signingConfigs {
+            release {
+                storeFile file(secrets.getProperty('RELEASE_KEYSTORE_PATH'))
+                storePassword secrets.getProperty('RELEASE_STORE_PASSWORD')
+                keyAlias secrets.getProperty('RELEASE_KEY_ALIAS')
+                keyPassword secrets.getProperty('RELEASE_KEY_PASSWORD')
             }
         }
     }
@@ -204,6 +224,9 @@ android {
             multiDexEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), '../TMessagesProj/proguard-rules.pro'
             ndk.debugSymbolLevel = 'FULL'
+            if (secrets.getProperty('RELEASE_KEYSTORE_PATH')) {
+                signingConfig signingConfigs.release
+            }
             buildConfigField "String", "BUILD_VERSION_STRING", "\"" + APP_VERSION_NAME + "\""
             buildConfigField "String", "APP_CENTER_HASH", "\"\""
             buildConfigField "String", "BETA_URL", "\"\""

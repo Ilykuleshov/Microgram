@@ -6257,6 +6257,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
     private void createGroupForThis() {
+        if (requestPeerType instanceof TLRPC.TL_requestPeerTypeBroadcast && !SharedConfig.CHANNELS_ENABLED) {
+            return;
+        }
         AlertDialog progress = new AlertDialog(getContext(), AlertDialog.ALERT_TYPE_SPINNER);
         if (requestPeerType instanceof TLRPC.TL_requestPeerTypeBroadcast) {
             Bundle args = new Bundle();
@@ -6351,7 +6354,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     BaseFragment[] lastFragments = new BaseFragment[]{fragment, null};
                     Utilities.doCallbacks(
                             next -> {
-                                if (requestPeerType.has_username != null && requestPeerType.has_username) {
+                                if (requestPeerType.has_username != null && requestPeerType.has_username && SharedConfig.CHANNELS_ENABLED) {
                                     Bundle args = new Bundle();
                                     args.putInt("step", 1);
                                     args.putLong("chat_id", chatId);

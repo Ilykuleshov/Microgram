@@ -208,14 +208,16 @@ public class LinkManager {
                 return true;
             }
             if ("channel".equalsIgnoreCase(second)) {
-                SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-                if (!BuildVars.DEBUG_VERSION && preferences.getBoolean("channel_intro", false)) {
-                    Bundle args = new Bundle();
-                    args.putInt("step", 0);
-                    presentFragment(new ChannelCreateActivity(args));
-                } else {
-                    presentFragment(new ActionIntroActivity(ActionIntroActivity.ACTION_TYPE_CHANNEL_CREATE));
-                    preferences.edit().putBoolean("channel_intro", true).commit();
+                if (SharedConfig.CHANNELS_ENABLED) {
+                    SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+                    if (!BuildVars.DEBUG_VERSION && preferences.getBoolean("channel_intro", false)) {
+                        Bundle args = new Bundle();
+                        args.putInt("step", 0);
+                        presentFragment(new ChannelCreateActivity(args));
+                    } else {
+                        presentFragment(new ActionIntroActivity(ActionIntroActivity.ACTION_TYPE_CHANNEL_CREATE));
+                        preferences.edit().putBoolean("channel_intro", true).commit();
+                    }
                 }
                 return true;
             }

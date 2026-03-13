@@ -602,7 +602,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                 }
                                 break;
                             case "channel":
-                                if (args != null) {
+                                if (args != null && SharedConfig.CHANNELS_ENABLED) {
                                     ChannelCreateActivity channel = new ChannelCreateActivity(args);
                                     if (actionBarLayout.addFragmentToStack(channel)) {
                                         channel.restoreSelfArgs(savedInstanceState);
