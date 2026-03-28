@@ -1481,6 +1481,8 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         private final static int CHANNELS_TYPE = 1;
         private final static int DOWNLOADS_TYPE = 2;
         private final static int FILTER_TYPE = 3;
+        // NOTE: Apps/Mini Apps search is intentionally disabled.
+        // Keep bots-related search out of the top-level search tabs.
         private final static int BOTS_TYPE = 4;
         private final static int PUBLIC_POSTS_TYPE = 5;
         private final static int POSTS_TYPE = 6;
@@ -1496,7 +1498,6 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                 items.add(new Item(PUBLIC_POSTS_TYPE));
             }
             items.add(new Item(CHANNELS_TYPE));
-            items.add(new Item(BOTS_TYPE));
             items.add(new Item(POSTS_TYPE));
             if (!showOnlyDialogsAdapter) {
                 Item item = new Item(FILTER_TYPE);
@@ -1526,8 +1527,6 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                 return getString(R.string.SearchAllChatsShort);
             } else if (items.get(position).type == CHANNELS_TYPE) {
                 return getString(R.string.ChannelsTab);
-            } else if (items.get(position).type == BOTS_TYPE) {
-                return getString(R.string.AppsTab);
             } else if (items.get(position).type == POSTS_TYPE) {
                 if (postsAreNew) {
                     return applyNewSpan(getString(R.string.SearchPosts));
@@ -1602,9 +1601,6 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             }
             if (items.get(position).type == CHANNELS_TYPE) {
                 return 3;
-            }
-            if (items.get(position).type == BOTS_TYPE) {
-                return 4;
             }
             if (items.get(position).type == DOWNLOADS_TYPE) {
                 return 2;
