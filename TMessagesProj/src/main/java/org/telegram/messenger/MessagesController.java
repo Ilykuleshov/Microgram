@@ -5874,7 +5874,7 @@ public class MessagesController extends BaseController implements NotificationCe
             inputPeer = new TLRPC.TL_inputPeerSelf();
         } else if (id < 0) {
             TLRPC.Chat chat = getChat(-id);
-            if (ChatObject.isChannel(chat)) {
+            if (ChatObject.isMegagroup(chat) || ChatObject.isChannel(chat)) {
                 inputPeer = new TLRPC.TL_inputPeerChannel();
                 inputPeer.channel_id = -id;
                 inputPeer.access_hash = chat.access_hash;
@@ -5895,7 +5895,7 @@ public class MessagesController extends BaseController implements NotificationCe
 
     public static TLRPC.InputPeer getInputPeer(TLRPC.Chat chat) {
         TLRPC.InputPeer inputPeer;
-        if (ChatObject.isChannel(chat)) {
+        if (ChatObject.isMegagroup(chat) || ChatObject.isChannel(chat)) {
             inputPeer = new TLRPC.TL_inputPeerChannel();
             inputPeer.channel_id = chat.id;
             inputPeer.access_hash = chat.access_hash;
@@ -7500,7 +7500,7 @@ public class MessagesController extends BaseController implements NotificationCe
         TLObject request;
         long dialogId = -chatId;
         TLRPC.Chat chat = getChat(chatId);
-        if (ChatObject.isChannel(chat)) {
+        if (ChatObject.isMegagroup(chat)) {
             TLRPC.TL_channels_getFullChannel req = new TLRPC.TL_channels_getFullChannel();
             req.channel = getInputChannel(chat);
             request = req;
@@ -7520,7 +7520,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 getMessagesStorage().updateChatInfo(res.full_chat, false);
                 getStoriesController().updateStoriesFromFullPeer(dialogId, res.full_chat.stories);
                 ChatThemeController.getInstance(currentAccount).saveChatWallpaper(-chatId, res.full_chat.wallpaper);
-                if (ChatObject.isChannel(chat)) {
+                if (ChatObject.isMegagroup(chat)) {
                     Integer value = dialogs_read_inbox_max.get(dialogId);
                     if (value == null) {
                         value = getMessagesStorage().getDialogReadMax(false, dialogId);
@@ -7727,7 +7727,7 @@ public class MessagesController extends BaseController implements NotificationCe
         } else {
             chat = null;
         }
-        if (ChatObject.isChannel(chat)) {
+        if (ChatObject.isMegagroup(chat)) {
             TLRPC.TL_channels_getMessages req = new TLRPC.TL_channels_getMessages();
             req.channel = getInputChannel(chat);
             req.id = result;
@@ -8657,7 +8657,7 @@ public class MessagesController extends BaseController implements NotificationCe
             return;
         }
         TLRPC.Chat chat = getChat(chatId);
-        if (ChatObject.isChannel(chat)) {
+        if (ChatObject.isMegagroup(chat) || ChatObject.isChannel(chat)) {
             TLRPC.TL_channels_editAdmin req = new TLRPC.TL_channels_editAdmin();
             req.channel = getInputChannel(chat);
             req.user_id = getInputUser(user);
@@ -9353,7 +9353,7 @@ public class MessagesController extends BaseController implements NotificationCe
         getConnectionsManager().sendRequest(req, (response, error) -> {
             if (response != null) {
                 TLRPC.TL_messages_affectedHistory res = (TLRPC.TL_messages_affectedHistory) response;
-                if (ChatObject.isChannel(chat)) {
+                if (ChatObject.isMegagroup(chat)) {
                     processNewChannelDifferenceParams(res.pts, res.pts_count, chat.id);
                 } else {
                     processNewDifferenceParams(-1, res.pts, -1, res.pts_count);
@@ -11130,7 +11130,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         req.add_offset = -count + 6;
                     } else {
                         if (dialogId < 0 && max_id != 0) {
-                            if (ChatObject.isChannel(chat)) {
+                            if (ChatObject.isMegagroup(chat) || ChatObject.isChannel(chat)) {
                                 req.add_offset = -1;
                                 req.limit += 1;
                             }
@@ -11189,7 +11189,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     req.add_offset = -count + 10;
                 } else {
                     if (dialogId < 0 && max_id != 0) {
-                        if (ChatObject.isChannel(chat)) {
+                        if (ChatObject.isMegagroup(chat) || ChatObject.isChannel(chat)) {
                             req.add_offset = -1;
                             req.limit += 1;
                         }
@@ -11306,7 +11306,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     req.add_offset = -count + 6;
                 } else {
                     if (dialogId < 0 && max_id != 0) {
-                        if (ChatObject.isChannel(chat)) {
+                        if (ChatObject.isMegagroup(chat) || ChatObject.isChannel(chat)) {
                             req.add_offset = -1;
                             req.limit += 1;
                         }
@@ -15179,7 +15179,8 @@ public class MessagesController extends BaseController implements NotificationCe
 
     public void changeChatTitle(long chatId, String title) {
         TLObject request;
-        if (ChatObject.isChannel(chatId, currentAccount)) {
+        TLRPC.Chat chat = getChat(chatId);
+        if (ChatObject.isMegagroup(chat) || ChatObject.isChannel(chatId, currentAccount)) {
             TLRPC.TL_channels_editTitle req = new TLRPC.TL_channels_editTitle();
             req.channel = getInputChannel(chatId);
             req.title = title;
@@ -15223,7 +15224,8 @@ public class MessagesController extends BaseController implements NotificationCe
         } else {
             inputChatPhoto = new TLRPC.TL_inputChatPhotoEmpty();
         }
-        if (ChatObject.isChannel(chatId, currentAccount)) {
+        TLRPC.Chat chat = getChat(chatId);
+        if (ChatObject.isMegagroup(chat) || ChatObject.isChannel(chatId, currentAccount)) {
             TLRPC.TL_channels_editPhoto req = new TLRPC.TL_channels_editPhoto();
             req.channel = getInputChannel(chatId);
             req.photo = inputChatPhoto;
