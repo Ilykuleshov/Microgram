@@ -1,0 +1,45 @@
+def localProps = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { localProps.load(it) }
+}
+
+rootProject.ext.localProperties = localProps
+
+rootProject.ext.getReleaseKeystoreFile = {
+    def path = localProps.getProperty('RELEASE_KEYSTORE_PATH', 'TMessagesProj/config/release.keystore')
+    rootProject.file(path)
+}
+
+rootProject.ext.hasReleaseSigning = {
+    localProps.getProperty('RELEASE_STORE_PASSWORD') &&
+            localProps.getProperty('RELEASE_KEY_ALIAS') &&
+            localProps.getProperty('RELEASE_KEY_PASSWORD') &&
+            rootProject.getReleaseKeystoreFile().exists()
+}
+
+ext.configureSigningConfigs = { signingConfigs, boolean configureDebug = true ->
+    if (!rootProject.hasReleaseSigning()) {
+        return
+    }
+    def keystore = rootProject.getReleaseKeystoreFile()
+    def storePassword = localProps.getProperty('RELEASE_STORE_PASSWORD')
+    def keyAlias = localProps.getProperty('RELEASE_KEY_ALIAS')
+    def keyPassword = localProps.getProperty('RELEASE_KEY_PASSWORD')
+
+    def applySigning = { String name ->
+        def config = signingConfigs.findByName(name)
+        if (config == null) {
+            config = signingConfigs.create(name)
+        }
+        config.storeFile = keystore
+        config.storePassword = storePassword
+        config.keyAlias = keyAlias
+        config.keyPassword = keyPassword
+    }
+
+    if (configureDebug) {
+        applySigning('debug')
+    }
+    applySigning('release')
+}

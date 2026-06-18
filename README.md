@@ -41,19 +41,13 @@ Microgram follows the same build process as upstream Telegram, with a few fork-s
    cd Microgram
    ```
 
-2. Create `local.properties` in the project root with your API credentials:
-   ```properties
-   TELEGRAM_API_ID=your_api_id
-   TELEGRAM_API_HASH=your_api_hash
-   ```
+2. Copy `local.properties.example` to `local.properties` and fill in your values (API credentials, keystore path, and signing passwords). Place your `release.keystore` at `TMessagesProj/config/release.keystore` unless you set `RELEASE_KEYSTORE_PATH`.
 
-3. Copy your `release.keystore` into `TMessagesProj/config` and set keystore passwords in `gradle.properties`.
+3. Add `google-services.json` for Firebase (application ID: `app.microgram.messenger` for release, `app.microgram.messenger.beta` for debug).
 
-4. Add `google-services.json` for Firebase (application ID: `app.microgram.messenger` for release, `app.microgram.messenger.beta` for debug).
+4. Open the project in Android Studio (open, do not import).
 
-5. Open the project in Android Studio (open, do not import).
-
-6. Build and run.
+5. Build and run.
 
 ### Fork configuration
 

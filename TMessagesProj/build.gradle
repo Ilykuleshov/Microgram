@@ -1,12 +1,9 @@
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 apply plugin: 'com.android.library'
+apply from: rootProject.file('gradle/signing.gradle')
 
-def secretsFile = rootProject.file('local.properties')
-def secrets = new Properties()
-if (secretsFile.exists()) {
-    secrets.load(new FileInputStream(secretsFile))
-}
+def secrets = rootProject.localProperties
 
 repositories {
     mavenCentral()
@@ -134,15 +131,8 @@ android {
         }
     }
 
-    if (secrets.getProperty('RELEASE_KEYSTORE_PATH')) {
-        signingConfigs {
-            release {
-                storeFile file(secrets.getProperty('RELEASE_KEYSTORE_PATH'))
-                storePassword secrets.getProperty('RELEASE_STORE_PASSWORD')
-                keyAlias secrets.getProperty('RELEASE_KEY_ALIAS')
-                keyPassword secrets.getProperty('RELEASE_KEY_PASSWORD')
-            }
-        }
+    signingConfigs {
+        configureSigningConfigs(delegate, false)
     }
 
     buildTypes {
@@ -234,7 +224,7 @@ android {
             multiDexEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), '../TMessagesProj/proguard-rules.pro'
             ndk.debugSymbolLevel = 'FULL'
-            if (secrets.getProperty('RELEASE_KEYSTORE_PATH')) {
+            if (rootProject.hasReleaseSigning()) {
                 signingConfig signingConfigs.release
             }
             buildConfigField "String", "BUILD_VERSION_STRING", "\"" + APP_VERSION_NAME + "\""
