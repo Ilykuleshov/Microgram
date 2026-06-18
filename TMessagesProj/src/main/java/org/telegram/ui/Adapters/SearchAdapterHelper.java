@@ -118,7 +118,7 @@ public class SearchAdapterHelper {
             ConnectionsManager.getInstance(currentAccount).cancelRequest(reqId, true);
         }
         pendingRequestIds.clear();
-        if (query == null) {
+        if (query == null || !SharedConfig.GLOBAL_SEARCH_ENABLED) {
             groupSearch.clear();
             groupSearchMap.clear();
             globalSearch.clear();
@@ -224,7 +224,7 @@ public class SearchAdapterHelper {
                                         chat = chatsMap.get(peer.channel_id);
                                     }
                                     if (chat != null) {
-                                        if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat) || !allowGlobalResults && ChatObject.isNotInChat(chat) || !filter(chat) || ChatObject.isChannelAndNotMegaGroup(chat)) {
+                                        if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat) || !allowGlobalResults && ChatObject.isNotInChat(chat) || !filter(chat) || ChatObject.isHiddenBroadcastChannel(chat)) {
                                             continue;
                                         }
                                         globalSearch.add(chat);
@@ -251,7 +251,7 @@ public class SearchAdapterHelper {
                                         chat = chatsMap.get(peer.channel_id);
                                     }
                                     if (chat != null) {
-                                        if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat) || -chat.id == exceptDialogId || !filter(chat) || ChatObject.isChannelAndNotMegaGroup(chat)) {
+                                        if (!allowChats || canAddGroupsOnly && !ChatObject.canAddBotsToChat(chat) || -chat.id == exceptDialogId || !filter(chat) || ChatObject.isHiddenBroadcastChannel(chat)) {
                                             continue;
                                         }
                                         localServerSearch.add(chat);

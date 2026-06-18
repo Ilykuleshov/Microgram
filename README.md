@@ -1,39 +1,93 @@
-## Telegram messenger for Android
+# Microgram
 
-[Telegram](https://telegram.org) is a messaging app with a focus on speed and security. It’s superfast, simple and free.
-This repo contains the official source code for [Telegram App for Android](https://play.google.com/store/apps/details?id=org.telegram.messenger).
+**Microgram** is a lightweight fork of [Telegram for Android](https://github.com/DrKLO/Telegram), focused on private messaging without the noise of broadcast channels and global discovery features.
 
-## Creating your Telegram Application
+Based on Telegram **12.8.1** (build 6916).
 
-We welcome all developers to use our API and source code to create applications on our platform.
-There are several things we require from **all developers** for the moment.
+## What is different from Telegram
 
-1. [**Obtain your own api_id**](https://core.telegram.org/api/obtaining_api_id) for your application.
-2. Please **do not** use the name Telegram for your app — or make sure your users understand that it is unofficial.
-3. Kindly **do not** use our standard logo (white paper plane in a blue circle) as your app's logo.
-3. Please study our [**security guidelines**](https://core.telegram.org/mtproto/security_guidelines) and take good care of your users' data and privacy.
-4. Please remember to publish **your** code too in order to comply with the licences.
+| Feature | Telegram | Microgram |
+|---------|----------|-----------|
+| Broadcast channels | Full support | Disabled — cannot create, join, or browse channels |
+| Existing channel chats | Shown in chat list | Hidden from the chat list |
+| Supergroups (megagroups) | Supported | Supported |
+| Global / server search | Full support | Disabled — search is limited to your local chats |
+| Apps / Mini Apps search tab | Available | Removed |
+| Channels search tab | Available | Removed |
+| App name & icon | Telegram | Microgram (custom branding) |
+| Package ID | `org.telegram.messenger` | `app.microgram.messenger` |
 
-### API, Protocol documentation
+Microgram keeps direct messages, groups, supergroups, secret chats, calls, and the rest of the core messaging experience.
 
-Telegram API manuals: https://core.telegram.org/api
+## Philosophy
 
-MTproto protocol manuals: https://core.telegram.org/mtproto
+Microgram strips away one-to-many broadcast and global discovery layers so the app stays closer to personal and small-group communication — a "micro" messenger built on Telegram's protocol and codebase.
 
-### Compilation Guide
+## Building
 
-**Note**: In order to support [reproducible builds](https://core.telegram.org/reproducible-builds), this repo contains dummy release.keystore,  google-services.json and filled variables inside BuildVars.java. Before publishing your own APKs please make sure to replace all these files with your own.
+Microgram follows the same build process as upstream Telegram, with a few fork-specific notes.
 
-You will require Android Studio 3.4, Android NDK rev. 20 and Android SDK 8.1
+### Requirements
 
-1. Download the Telegram source code from https://github.com/DrKLO/Telegram ( git clone https://github.com/DrKLO/Telegram.git )
-2. Copy your release.keystore into TMessagesProj/config
-3. Fill out RELEASE_KEY_PASSWORD, RELEASE_KEY_ALIAS, RELEASE_STORE_PASSWORD in gradle.properties to access your  release.keystore
-4.  Go to https://console.firebase.google.com/, create two android apps with application IDs org.telegram.messenger and org.telegram.messenger.beta, turn on firebase messaging and download google-services.json, which should be copied to the same folder as TMessagesProj.
-5. Open the project in the Studio (note that it should be opened, NOT imported).
-6. Fill out values in TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java – there’s a link for each of the variables showing where and which data to obtain.
-7. You are ready to compile Telegram.
+- Android Studio (recent version recommended)
+- Android NDK
+- Your own Telegram API credentials from [my.telegram.org](https://my.telegram.org)
 
-### Localization
+### Setup
 
-We moved all translations to https://translations.telegram.org/en/android/. Please use it.
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/Ilykuleshov/Microgram.git
+   cd Microgram
+   ```
+
+2. Create `local.properties` in the project root with your API credentials:
+   ```properties
+   TELEGRAM_API_ID=your_api_id
+   TELEGRAM_API_HASH=your_api_hash
+   ```
+
+3. Copy your `release.keystore` into `TMessagesProj/config` and set keystore passwords in `gradle.properties`.
+
+4. Add `google-services.json` for Firebase (application ID: `app.microgram.messenger` for release, `app.microgram.messenger.beta` for debug).
+
+5. Open the project in Android Studio (open, do not import).
+
+6. Build and run.
+
+### Fork configuration
+
+Microgram-specific flags live in `SharedConfig.java`:
+
+```java
+public static final boolean CHANNELS_ENABLED = false;
+public static final boolean GLOBAL_SEARCH_ENABLED = false;
+```
+
+## Syncing with upstream
+
+An `upstream` remote pointing to `https://github.com/DrKLO/Telegram` is recommended:
+
+```bash
+git remote add upstream https://github.com/DrKLO/Telegram.git
+git fetch upstream
+git merge upstream/master
+```
+
+After merging, re-check `SharedConfig.java` and the Microgram-specific changes in `ChatObject.java`, `MessagesController.java`, `SearchViewPager.java`, and `SearchAdapterHelper.java`.
+
+## License
+
+Microgram is based on Telegram for Android, licensed under **GNU GPL v. 2 or later**. See [LICENSE](LICENSE).
+
+Per Telegram's guidelines for third-party clients:
+
+- Do not distribute this as "Telegram".
+- Use your own API credentials.
+- Publish your source code to comply with the GPL.
+
+## Links
+
+- Upstream source: https://github.com/DrKLO/Telegram
+- Telegram API: https://core.telegram.org/api
+- MTProto protocol: https://core.telegram.org/mtproto

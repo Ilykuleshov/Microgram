@@ -807,7 +807,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
             }
         }
 
-        final ImageLocation thumbLocation = ImageLocation.getForUserOrChat(avatarObject, ImageLocation.TYPE_SMALL);
+        final ImageLocation thumbLocation = ImageLocation.getForUserOrChat(currentAccount, avatarObject, ImageLocation.TYPE_SMALL);
         avatarImageView.setImage(thumbLocation, "50_50", avatarDrawable, avatarObject);
 
         if (nameTextView[0] != null && TextUtils.isEmpty(nameTextView[0].getText())) {
@@ -987,7 +987,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
             subtitleTextView[i].setText(LocaleController.formatPluralString("GIFs", mediaCount[MediaDataController.MEDIA_GIF]), animated);
         } else if (id == SharedMediaLayout.TAB_RECOMMENDED_CHANNELS) {
             showSubtitle(i, true, true);
-            MessagesController.ChannelRecommendations rec = MessagesController.getInstance(currentAccount).getChannelRecommendations(-dialogId);
+            MessagesController.ChannelRecommendations rec = MessagesController.getInstance(currentAccount).getChannelRecommendations(dialogId);
             subtitleTextView[i].setText(LocaleController.formatPluralString("Channels", rec == null ? 0 : rec.more + rec.chats.size()), animated);
         }
     }

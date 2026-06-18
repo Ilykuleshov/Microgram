@@ -40,12 +40,16 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.Xfermode;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -148,9 +152,11 @@ import com.google.android.gms.tasks.Task;
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.messenger.utils.CustomHtml;
+import org.telegram.messenger.utils.DebugRecordingCanvas;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
+import org.telegram.tgnet.tl.TL_stars;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.BottomSheet;
@@ -178,6 +184,7 @@ import org.telegram.ui.Components.TypefaceSpan;
 import org.telegram.ui.Components.URLSpanReplacement;
 import org.telegram.ui.Components.UndoView;
 import org.telegram.ui.Components.spoilers.SpoilersTextView;
+import org.telegram.ui.DebugRecordingCanvasReplayFragment;
 import org.telegram.ui.LaunchActivity;
 import org.telegram.ui.Stories.PeerStoriesView;
 import org.telegram.ui.Stories.StoryMediaAreasView;
@@ -249,7 +256,6 @@ public class AndroidUtilities {
     public final static String TYPEFACE_ROBOTO_MEDIUM_ITALIC = "fonts/rmediumitalic.ttf";
     public final static String TYPEFACE_ROBOTO_MONO = "fonts/rmono.ttf";
     public final static String TYPEFACE_MERRIWEATHER_BOLD = "fonts/mw_bold.ttf";
-    public final static String TYPEFACE_COURIER_NEW_BOLD = "fonts/courier_new_bold.ttf";
 
     public static Typeface mediumTypeface;
     public static ThreadLocal<byte[]> readBufferLocal = new ThreadLocal<>();
@@ -768,6 +774,7 @@ public class AndroidUtilities {
                     @Override
                     public void updateDrawState(@NonNull TextPaint ds) {
                         ds.setUnderlineText(false);
+                        ds.setTypeface(AndroidUtilities.bold());
                         ds.setColor(color);
                     }
                 }, index, index + len, 0);
@@ -1450,8 +1457,10 @@ public class AndroidUtilities {
         if (context == null || (AndroidUtilities.statusBarHeight > 0 && !force)) {
             return;
         }
-        AndroidUtilities.statusBarHeight = getStatusBarHeight(context);
-        AndroidUtilities.navigationBarHeight = getNavigationBarHeight(context);
+        if (BuildVars.USE_LEGACY_SYSTEM_INSETS) {
+            AndroidUtilities.statusBarHeight = getStatusBarHeight(context);
+            AndroidUtilities.navigationBarHeight = getNavigationBarHeight(context);
+        }
     }
 
     public static int getStatusBarHeight(Context context) {
@@ -2554,23 +2563,16 @@ public class AndroidUtilities {
             } else {
                 return new String[]{locale.replace('_', '-')};
             }
-        } catch (Exception ignore) {
-
-        }
+        } catch (Exception ignore) {}
         return new String[]{"en"};
     }
 
     public static void hideKeyboard(View view) {
-        if (view == null) {
-            return;
-        }
+        if (view == null) return;
         try {
-            InputMethodManager imm = (InputMethodManager) view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (!imm.isActive()) {
-                return;
-            }
+            final InputMethodManager imm = (InputMethodManager) view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (!imm.isActive()) return;
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-
         } catch (Exception e) {
             FileLog.e(e);
         }
@@ -2973,6 +2975,13 @@ public class AndroidUtilities {
 
     public static boolean isTablet() {
         return isTabletInternal() && !SharedConfig.forceDisableTabletMode;
+    }
+
+    public static boolean isFold() {
+        return (
+            ApplicationLoader.applicationContext != null &&
+            ApplicationLoader.applicationContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_SENSOR_HINGE_ANGLE)
+        );
     }
 
     public static boolean isSmallScreen() {
@@ -4255,7 +4264,7 @@ public class AndroidUtilities {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             MimeTypeMap myMime = MimeTypeMap.getSingleton();
-            int idx = fileName.lastIndexOf('.');
+            int idx = fileName == null ? -1 : fileName.lastIndexOf('.');
             if (idx != -1) {
                 String ext = fileName.substring(idx + 1);
                 if (restrict && MessageObject.isV(ext)) {
@@ -4695,7 +4704,7 @@ public class AndroidUtilities {
             tableView.addRow(getString(R.string.UseProxyUsername), user);
         }
         if (!TextUtils.isEmpty(password)) {
-            tableView.addRow(getString(R.string.UseProxyPassword), user);
+            tableView.addRow(getString(R.string.UseProxyPassword), password);
         }
         final ButtonSpan.TextViewButtons[] statusTextView = new ButtonSpan.TextViewButtons[1];
         tableView.addRow(getString(R.string.ProxyStatus), "", statusTextView);
@@ -6911,6 +6920,16 @@ public class AndroidUtilities {
         return true;
     }
 
+    public static Bitmap applyColorMatrix(Bitmap bitmap, ColorMatrix matrix) {
+        final Paint paint = new Paint();
+        paint.setColorFilter(new ColorMatrixColorFilter(matrix));
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC));
+
+        final Bitmap result = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        final Canvas canvas = new Canvas(result);
+        canvas.drawBitmap(bitmap, 0, 0, paint);
+        return result;
+    }
 
     public static int applyColorMatrix(int argb, ColorMatrix matrix) {
         float[] m = matrix.getArray();
@@ -6974,5 +6993,64 @@ public class AndroidUtilities {
         } catch (Throwable e) {
             FileLog.e(e);
         }
+    }
+
+    public static void dumpCanvas(View v) {
+        if (!BuildConfig.DEBUG_PRIVATE_VERSION) {
+            return;
+        }
+
+        final Bitmap b = Bitmap.createBitmap(v.getWidth(), v.getHeight(), Bitmap.Config.ARGB_8888);
+        final DebugRecordingCanvas c = new DebugRecordingCanvas(b);
+        v.draw(c);
+        c.logCommands();
+
+        LaunchActivity.instance.presentFragment(new DebugRecordingCanvasReplayFragment(c));
+    }
+
+    public static <A, B> B find(List<A> array, Class<B> clazz) {
+        if (array == null) {
+            return null;
+        }
+        for (int i = 0; i < array.size(); ++i) {
+            final A obj = array.get(i);
+            if (clazz.isInstance(obj)) {
+                return clazz.cast(obj);
+            }
+        }
+        return null;
+    }
+
+    public static <A, B> B findLast(List<A> array, Class<B> clazz) {
+        if (array == null) {
+            return null;
+        }
+        for (int i = array.size() - 1; i >= 0; --i) {
+            final A obj = array.get(i);
+            if (clazz.isInstance(obj)) {
+                return clazz.cast(obj);
+            }
+        }
+        return null;
+    }
+
+    public static TLRPC.Photo findPhoto(List<TLRPC.Photo> array, long id) {
+        if (array == null) return null;
+        for (int i = 0; i < array.size(); ++i) {
+            final TLRPC.Photo photo = array.get(i);
+            if (photo != null && photo.id == id)
+                return photo;
+        }
+        return null;
+    }
+
+    public static TLRPC.Document findDocument(List<TLRPC.Document> array, long id) {
+        if (array == null) return null;
+        for (int i = 0; i < array.size(); ++i) {
+            final TLRPC.Document doc = array.get(i);
+            if (doc != null && doc.id == id)
+                return doc;
+        }
+        return null;
     }
 }

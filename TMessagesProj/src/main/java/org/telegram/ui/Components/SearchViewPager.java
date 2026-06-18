@@ -41,6 +41,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SendMessagesHelper;
+import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBarMenu;
@@ -1494,11 +1495,15 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         public void updateItems() {
             items.clear();
             items.add(new Item(DIALOGS_TYPE));
-            if (expandedPublicPosts) {
-                items.add(new Item(PUBLIC_POSTS_TYPE));
+            if (SharedConfig.GLOBAL_SEARCH_ENABLED) {
+                if (expandedPublicPosts) {
+                    items.add(new Item(PUBLIC_POSTS_TYPE));
+                }
+                if (SharedConfig.CHANNELS_ENABLED) {
+                    items.add(new Item(CHANNELS_TYPE));
+                }
+                items.add(new Item(POSTS_TYPE));
             }
-            items.add(new Item(CHANNELS_TYPE));
-            items.add(new Item(POSTS_TYPE));
             if (!showOnlyDialogsAdapter) {
                 Item item = new Item(FILTER_TYPE);
                 item.filterIndex = 0;

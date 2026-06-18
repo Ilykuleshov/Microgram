@@ -62,9 +62,7 @@ import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.ClickableSpan;
-import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
@@ -91,7 +89,6 @@ import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.BillingController;
 import org.telegram.messenger.BirthdayController;
 import org.telegram.messenger.BotWebViewVibrationEffect;
-import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ChatThemeController;
 import org.telegram.messenger.DialogObject;
@@ -114,6 +111,7 @@ import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_account;
 import org.telegram.tgnet.tl.TL_stars;
+import org.telegram.tgnet.tl.TL_update;
 import org.telegram.ui.AccountFrozenAlert;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
@@ -148,7 +146,6 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.LinkPath;
 import org.telegram.ui.Components.LinkSpanDrawable;
 import org.telegram.ui.Components.LoadingSpan;
-import org.telegram.ui.Components.PostsSearchContainer;
 import org.telegram.ui.Components.Premium.LimitPreviewView;
 import org.telegram.ui.Components.Premium.LimitReachedBottomSheet;
 import org.telegram.ui.Components.Premium.PremiumFeatureBottomSheet;
@@ -161,7 +158,6 @@ import org.telegram.ui.Components.ShareAlert;
 import org.telegram.ui.Components.TableView;
 import org.telegram.ui.Components.Text;
 import org.telegram.ui.Components.TextHelper;
-import org.telegram.ui.Components.ThanosEffect;
 import org.telegram.ui.Components.ViewPagerFixed;
 import org.telegram.ui.Components.spoilers.SpoilersTextView;
 import org.telegram.ui.DialogsActivity;
@@ -184,7 +180,6 @@ import org.telegram.ui.TwoStepVerificationSetupActivity;
 import org.telegram.ui.bots.AffiliateProgramFragment;
 import org.telegram.ui.bots.BotWebViewSheet;
 
-import java.lang.reflect.GenericArrayType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -917,7 +912,7 @@ public class StarGiftSheet extends BottomSheetWithRecyclerListView implements No
             ConnectionsManager.getInstance(currentAccount).sendRequestTyped(req, AndroidUtilities::runOnUIThread, (res, err) -> {
                 if (res != null) {
                     MessageObject messageObject = null;
-                    for (TLRPC.TL_updateNewMessage upd : findUpdates(res, TLRPC.TL_updateNewMessage.class)) {
+                    for (TL_update.TL_updateNewMessage upd : findUpdates(res, TL_update.TL_updateNewMessage.class)) {
                         if (upd.message != null && upd.message.action instanceof TLRPC.TL_messageActionStarGiftUnique) {
                             messageObject = new MessageObject(currentAccount, upd.message, false, false);
                             break;
@@ -1775,7 +1770,10 @@ public class StarGiftSheet extends BottomSheetWithRecyclerListView implements No
                 } else if (child == recyclerListView) {
                     child.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(height - bottomInset, MeasureSpec.EXACTLY));
                 } else {
-                    child.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(9999, MeasureSpec.AT_MOST));
+                    final int allowedHeight = child.getLayoutParams() != null && child.getLayoutParams().height == LayoutHelper.MATCH_PARENT ?
+                        height : 9999;  // why 9999?
+
+                    child.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(allowedHeight, MeasureSpec.AT_MOST));
                 }
             }
             setMeasuredDimension(width, height);
@@ -2051,7 +2049,13 @@ public class StarGiftSheet extends BottomSheetWithRecyclerListView implements No
 
             imageLayout = new FrameLayout(context);
             for (int i = 0; i < imageView.length; ++i) {
-                imageView[i] = new BackupImageView(context);
+                imageView[i] = new BackupImageView(context) {
+                    @Override
+                    public void setAlpha(float alpha) {
+                        super.setAlpha(alpha);
+                        setVisibility(alpha > 0 ? VISIBLE : INVISIBLE);
+                    }
+                };
                 imageView[i].setLayerNum(4 | 6656);
                 if (i > 0) {
                     imageView[i].getImageReceiver().setCrossfadeDuration(1);
@@ -2233,6 +2237,7 @@ public class StarGiftSheet extends BottomSheetWithRecyclerListView implements No
             craftView.setVisibility(View.GONE);
 
             optionsView = new ImageView(context);
+            optionsView.setContentDescription(getString(R.string.AccDescrGoBack));
             optionsView.setImageResource(R.drawable.media_more);
             optionsView.setScaleType(ImageView.ScaleType.CENTER);
             optionsView.setBackground(Theme.createSelectorDrawable(0x20ffffff, Theme.RIPPLE_MASK_CIRCLE_20DP));
@@ -2287,7 +2292,9 @@ public class StarGiftSheet extends BottomSheetWithRecyclerListView implements No
         public void onSwitchPage(PageTransition p) {
             currentPage = p;
             for (int i = 0; i < layout.length; ++i) {
-                layout[i].setAlpha(p.at(i));
+                final  float alpha = p.at(i);
+                layout[i].setAlpha(alpha);
+                layout[i].setVisibility(alpha > 0 ? VISIBLE : INVISIBLE);
             }
             closeView.setAlpha(Math.max(backdrop[0] != null ? p.at(PAGE_WEAR) : 0.0f, backdrop[1] != null ? p.at(PAGE_UPGRADE) : 0.0f));
             closeView.setVisibility(backdrop[0] != null && p.to == PAGE_WEAR || backdrop[1] != null && p.to == PAGE_UPGRADE ? View.VISIBLE : View.GONE);
@@ -6027,15 +6034,15 @@ public class StarGiftSheet extends BottomSheetWithRecyclerListView implements No
             return 0;
         }
         TLRPC.Message message = null;
-        if (updates.update instanceof TLRPC.TL_updateNewMessage) {
-            message = ((TLRPC.TL_updateNewMessage) updates.update).message;
+        if (updates.update instanceof TL_update.TL_updateNewMessage) {
+            message = ((TL_update.TL_updateNewMessage) updates.update).message;
 //        } else if (updates.update instanceof TLRPC.TL_updateEditMessage) {
 //            message = ((TLRPC.TL_updateEditMessage) updates.update).message;
         } else if (updates.updates != null) {
             for (int i = 0; i < updates.updates.size(); ++i) {
                 final TLRPC.Update update = updates.updates.get(i);
-                if (update instanceof TLRPC.TL_updateNewMessage) {
-                    message = ((TLRPC.TL_updateNewMessage) update).message;
+                if (update instanceof TL_update.TL_updateNewMessage) {
+                    message = ((TL_update.TL_updateNewMessage) update).message;
                     break;
                 }// else if (update instanceof TLRPC.TL_updateEditMessage) {
 //                    message = ((TLRPC.TL_updateEditMessage) update).message;
@@ -7787,7 +7794,7 @@ public class StarGiftSheet extends BottomSheetWithRecyclerListView implements No
             frameView.addView(topView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
             if (!isTonOnly) {
-                currencyTabsView = new HorizontalRoundTabsLayout(context);
+                currencyTabsView = new HorizontalRoundTabsLayout(context, resourcesProvider);
                 ArrayList<CharSequence> tabs = new ArrayList<>();
                 tabs.add(getString(R.string.Gift2BuyInStars));
                 tabs.add(getString(R.string.Gift2BuyInTON));
@@ -9468,7 +9475,7 @@ public class StarGiftSheet extends BottomSheetWithRecyclerListView implements No
 
             public boolean isReplaceIcon;
             public void setReplaceIcon(boolean replaceIcon) {
-                final float scale = replaceIcon ? 1 : 0.8f;
+                final float scale = replaceIcon ? 0.8f : 0.8f;
                 closeIcon.setScaleX(scale);
                 closeIcon.setScaleY(scale);
                 closeIcon.setImageResource((isReplaceIcon = replaceIcon) ? R.drawable.mini_replace2 : R.drawable.msg_close);
