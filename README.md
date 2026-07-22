@@ -2,7 +2,7 @@
 
 **Microgram** is a lightweight fork of [Telegram for Android](https://github.com/DrKLO/Telegram), focused on private messaging without the noise of broadcast channels and global discovery features.
 
-Based on Telegram **12.8.1** (build 6916).
+Based on Telegram **12.9.0** (build 6966).
 
 ## What is different from Telegram
 
