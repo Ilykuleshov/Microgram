@@ -681,7 +681,9 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             swipeGestureInfoRow = rowCount++;
 
             nightThemeRow = rowCount++;
-            browserRow = rowCount++;
+            if (SharedConfig.IN_APP_BROWSER_ENABLED) {
+                browserRow = rowCount++;
+            }
             liteModeRow = rowCount++;
             stickersRow = rowCount++;
             stickersSectionRow = rowCount++;

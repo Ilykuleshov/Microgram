@@ -53,6 +53,7 @@ import java.util.Locale;
 public class SharedConfig {
     public static final boolean CHANNELS_ENABLED = false;
     public static final boolean GLOBAL_SEARCH_ENABLED = false;
+    public static final boolean IN_APP_BROWSER_ENABLED = false;
     /**
      * V2: Ping and check time serialized
      */

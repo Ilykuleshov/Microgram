@@ -76,6 +76,9 @@ public class WebBrowserSettings extends UniversalFragment implements Notificatio
 
     @Override
     public boolean onFragmentCreate() {
+        if (!SharedConfig.IN_APP_BROWSER_ENABLED) {
+            return false;
+        }
         loadSizes();
         getNotificationCenter().addObserver(this, NotificationCenter.webBrowserSettingsUpdate);
         return super.onFragmentCreate();

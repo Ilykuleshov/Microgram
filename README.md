@@ -2,7 +2,7 @@
 
 **Microgram** is a lightweight fork of [Telegram for Android](https://github.com/DrKLO/Telegram), focused on private messaging without the noise of broadcast channels and global discovery features.
 
-Based on Telegram **12.9.0** (build 6966).
+Based on Telegram **12.10.1** (build 7038).
 
 ## What is different from Telegram
 
@@ -14,6 +14,7 @@ Based on Telegram **12.9.0** (build 6966).
 | Global / server search | Full support | Disabled — search is limited to your local chats |
 | Apps / Mini Apps search tab | Available | Removed |
 | Channels search tab | Available | Removed |
+| In-app browser | Opens links inside the app | Disabled — links open in the system browser |
 | App name & icon | Telegram | Microgram (custom branding) |
 | Package ID | `org.telegram.messenger` | `app.microgram.messenger` |
 
@@ -37,8 +38,13 @@ Microgram follows the same build process as upstream Telegram, with a few fork-s
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/Ilykuleshov/Microgram.git
+   git clone --recurse-submodules https://github.com/Ilykuleshov/Microgram.git
    cd Microgram
+   ```
+
+   If you already cloned without submodules:
+   ```bash
+   git submodule update --init --recursive
    ```
 
 2. Copy `local.properties.example` to `local.properties` and fill in your values (API credentials, keystore path, and signing passwords). Place your `release.keystore` at `TMessagesProj/config/release.keystore` unless you set `RELEASE_KEYSTORE_PATH`.
@@ -56,6 +62,7 @@ Microgram-specific flags live in `SharedConfig.java`:
 ```java
 public static final boolean CHANNELS_ENABLED = false;
 public static final boolean GLOBAL_SEARCH_ENABLED = false;
+public static final boolean IN_APP_BROWSER_ENABLED = false;
 ```
 
 ## Syncing with upstream
@@ -66,9 +73,10 @@ An `upstream` remote pointing to `https://github.com/DrKLO/Telegram` is recommen
 git remote add upstream https://github.com/DrKLO/Telegram.git
 git fetch upstream
 git merge upstream/master
+git submodule update --init --recursive
 ```
 
-After merging, re-check `SharedConfig.java` and the Microgram-specific changes in `ChatObject.java`, `MessagesController.java`, `SearchViewPager.java`, and `SearchAdapterHelper.java`.
+After merging, re-check `SharedConfig.java` and the Microgram-specific changes in `ChatObject.java`, `MessagesController.java`, `SearchViewPager.java`, `SearchAdapterHelper.java`, and `Browser.java`.
 
 ## License
 

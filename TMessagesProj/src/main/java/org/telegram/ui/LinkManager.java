@@ -505,6 +505,9 @@ public class LinkManager {
         }
 
         if ("chat".equalsIgnoreCase(first) && "browser".equalsIgnoreCase(second)) {
+            if (!SharedConfig.IN_APP_BROWSER_ENABLED) {
+                return true;
+            }
             if (TextUtils.isEmpty(third)) {
                 presentFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC));
                 scrollTo("browserRow");

@@ -1521,8 +1521,6 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
         private final static int CHANNELS_TYPE = 1;
         private final static int DOWNLOADS_TYPE = 2;
         private final static int FILTER_TYPE = 3;
-        // NOTE: Apps/Mini Apps search is intentionally disabled.
-        // Keep bots-related search out of the top-level search tabs.
         private final static int BOTS_TYPE = 4;
         private final static int PUBLIC_POSTS_TYPE = 5;
         private final static int POSTS_TYPE = 6;
@@ -1538,7 +1536,6 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
                 return;
             }
 
-            // NOTE: Apps/Mini Apps search is intentionally disabled (no BOTS_TYPE tab).
             if (SharedConfig.GLOBAL_SEARCH_ENABLED) {
                 if (expandedPublicPosts) {
                     items.add(new Item(PUBLIC_POSTS_TYPE));

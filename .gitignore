@@ -13,11 +13,9 @@ TMessagesProj_App/afat/
 TMessagesProj_AppHockeyApp/afat/
 TMessagesProj_AppStandalone/afat/
 TMessagesProj_AppHuawei/afat/
+TMessagesProj/jni/ffmpeg/build_android
 
-# Local configuration file
-local.properties
-
-# Gradle properties which might contain passwords
+# Local configuration
 gradle.properties
 
 # Keystore files
@@ -25,3 +23,4 @@ gradle.properties
 *.keystore
 
 **/google-services.json
+**/agconnect-services.json
