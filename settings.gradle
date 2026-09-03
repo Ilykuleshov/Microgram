@@ -1,3 +1,17 @@
+def localPropertiesFile = new File(settingsDir, 'local.properties')
+if (localPropertiesFile.exists()) {
+    def localProperties = new Properties()
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+    gradle.beforeProject { project ->
+        ['RELEASE_STORE_PASSWORD', 'RELEASE_KEY_ALIAS', 'RELEASE_KEY_PASSWORD'].each { key ->
+            def value = localProperties.getProperty(key)
+            if (value != null && !project.hasProperty(key)) {
+                project.ext.set(key, value)
+            }
+        }
+    }
+}
+
 include ':TMessagesProj'
 include ':TMessagesProj_App'
 include ':TMessagesProj_AppHuawei'

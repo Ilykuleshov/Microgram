@@ -24,3 +24,5 @@ gradle.properties
 
 **/google-services.json
 **/agconnect-services.json
+*.apk
+*.aab
