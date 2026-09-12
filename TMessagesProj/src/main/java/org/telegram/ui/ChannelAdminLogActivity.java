@@ -389,6 +389,10 @@ public class ChannelAdminLogActivity extends BaseFragment implements Notificatio
 
     @Override
     public boolean onFragmentCreate() {
+        if (ChatObject.isHiddenBroadcastChannel(currentChat)) {
+            ChannelsDisabledActivity.requestPresentation();
+            return false;
+        }
         super.onFragmentCreate();
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.messagePlayingDidStart);

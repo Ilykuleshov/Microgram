@@ -349,6 +349,10 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                     }
                 }
             }
+            if (ChatObject.isHiddenBroadcastChannel(currentChat)) {
+                ChannelsDisabledActivity.requestPresentation();
+                return false;
+            }
         } else {
             currentUser = userId == 0 ? null : getMessagesController().getUser(userId);
             if (currentUser == null) {

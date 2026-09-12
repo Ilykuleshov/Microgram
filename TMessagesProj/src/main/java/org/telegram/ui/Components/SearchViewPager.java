@@ -1657,6 +1657,12 @@ public class SearchViewPager extends ViewPagerFixed implements FilteredSearchVie
             if (items.get(position).type == POSTS_TYPE) {
                 return 6;
             }
+            if (items.get(position).type == BOTS_TYPE) {
+                return 4;
+            }
+            if (items.get(position).type == FILTER_TYPE) {
+                return 10 + items.get(position).filterIndex;
+            }
             return items.get(position).type + position;
         }
 

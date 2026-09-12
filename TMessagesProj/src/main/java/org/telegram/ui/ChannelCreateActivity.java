@@ -191,6 +191,7 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
     @Override
     public boolean onFragmentCreate() {
         if (!SharedConfig.CHANNELS_ENABLED) {
+            ChannelsDisabledActivity.requestPresentation();
             return false;
         }
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.chatDidCreated);

@@ -34,6 +34,7 @@ import android.graphics.Shader;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
@@ -65,6 +66,8 @@ import androidx.core.view.WindowInsetsCompat;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.AnimationNotificationsLocker;
 import org.telegram.messenger.BuildVars;
+import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.MessagesController;
@@ -72,6 +75,8 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.utils.ViewOutlineProviderImpl;
+import org.telegram.tgnet.TLRPC;
+import org.telegram.ui.ChannelsDisabledActivity;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.AnimatedFloat;
 import org.telegram.ui.Components.BackButtonMenu;
@@ -1940,8 +1945,34 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         return isInPreviewMode() && previewMenu != null;
     }
 
+    private BaseFragment applyChannelGate(BaseFragment fragment) {
+        if (fragment instanceof ChannelsDisabledActivity || SharedConfig.CHANNELS_ENABLED || fragment == null) {
+            return fragment;
+        }
+        Bundle args = fragment.getArguments();
+        if (args == null) {
+            return fragment;
+        }
+        long chatId = args.getLong("chat_id", 0);
+        if (chatId == 0) {
+            long dialogId = args.getLong("dialog_id", 0);
+            if (dialogId < 0 && !DialogObject.isEncryptedDialog(dialogId)) {
+                chatId = -dialogId;
+            }
+        }
+        if (chatId == 0) {
+            return fragment;
+        }
+        TLRPC.Chat chat = MessagesController.getInstance(fragment.getCurrentAccount()).getChat(chatId);
+        if (ChatObject.isHiddenBroadcastChannel(chat)) {
+            return new ChannelsDisabledActivity();
+        }
+        return fragment;
+    }
+
     @Override
     public boolean presentFragment(NavigationParams params) {
+        params.fragment = applyChannelGate(params.fragment);
         BaseFragment fragment = params.fragment;
         boolean removeLast = params.removeLast;
         boolean forceWithoutAnimation = params.noAnimation;
@@ -1950,6 +1981,12 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
         ActionBarPopupWindow.ActionBarPopupWindowLayout menu = params.menuView;
 
         if (fragment == null || checkTransitionAnimation() || delegate != null && check && !delegate.needPresentFragment(this, params) || !fragment.onFragmentCreate()) {
+            ChannelsDisabledActivity replacement = ChannelsDisabledActivity.consumePendingPresentation();
+            if (replacement != null) {
+                params.fragment = replacement;
+                params.checkPresentFromDelegate = false;
+                return presentFragment(params);
+            }
             return false;
         }
         final EdgeToEdgeSupportMode edgeToEdgeSupportMode = fragment.getEdgeToEdgeSupportMode();
@@ -2330,7 +2367,12 @@ public class ActionBarLayout extends FrameLayout implements INavigationLayout, F
 
     @Override
     public boolean addFragmentToStack(BaseFragment fragment, int position) {
+        fragment = applyChannelGate(fragment);
         if (delegate != null && !delegate.needAddFragmentToStack(fragment, this) || !fragment.onFragmentCreate()) {
+            ChannelsDisabledActivity replacement = ChannelsDisabledActivity.consumePendingPresentation();
+            if (replacement != null) {
+                return addFragmentToStack(replacement, position);
+            }
             return false;
         }
         if (fragmentsStack.contains(fragment)) {

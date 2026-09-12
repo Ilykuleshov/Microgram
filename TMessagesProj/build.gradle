@@ -133,6 +133,17 @@ android {
 
         multiDexEnabled true
 
+        def telegramApiId = getProps("TELEGRAM_API_ID")
+        def telegramApiHash = getProps("TELEGRAM_API_HASH")
+        if (telegramApiId == null || telegramApiId.toString().trim().isEmpty()) {
+            telegramApiId = "4"
+        }
+        if (telegramApiHash == null || telegramApiHash.toString().trim().isEmpty()) {
+            telegramApiHash = "014b35b6184100b085b0d0572f9b5103"
+        }
+        buildConfigField "int", "TELEGRAM_API_ID", telegramApiId.toString().trim()
+        buildConfigField "String", "TELEGRAM_API_HASH", "\"${telegramApiHash.toString().trim()}\""
+
         externalNativeBuild {
             cmake {
                 version '3.22.1'

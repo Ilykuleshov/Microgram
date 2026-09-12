@@ -3237,7 +3237,11 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                             needShowAlert(getString(R.string.RestorePasswordNoEmailTitle), getString("FloodWait", R.string.FloodWait));
                         } else if (error.code != -1000) {
                             AlertsCreator.processError(currentAccount, error, LoginActivity.this, req, phoneInputData.phoneNumber);
+                        } else {
+                            needShowAlert(getString(R.string.RestorePasswordNoEmailTitle), getString(R.string.LoginConnectionError));
                         }
+                    } else {
+                        needShowAlert(getString(R.string.RestorePasswordNoEmailTitle), getString(R.string.LoginConnectionError));
                     }
                 }
                 if (!isRequestingFirebaseSms) {

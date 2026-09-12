@@ -2,14 +2,14 @@
 
 **Microgram** is a lightweight fork of [Telegram for Android](https://github.com/DrKLO/Telegram), focused on private messaging without the noise of broadcast channels and global discovery features.
 
-Based on Telegram **12.10.1** (build 7038).
+Microgram **12.10.1.1**, based on Telegram **12.10.1** (build 7038).
 
 ## What is different from Telegram
 
 | Feature | Telegram | Microgram |
 |---------|----------|-----------|
-| Broadcast channels | Full support | Disabled — cannot create, join, or browse channels |
-| Existing channel chats | Shown in chat list | Hidden from the chat list |
+| Broadcast channels | Full support | Disabled — cannot create, join, or open channels |
+| Existing channel chats | Shown in chat list | Hidden; opening one shows “Channels are disabled!” |
 | Supergroups (megagroups) | Supported | Supported |
 | Global / server search | Full support | Disabled — search is limited to your local chats |
 | Apps / Mini Apps search tab | Available | Removed |

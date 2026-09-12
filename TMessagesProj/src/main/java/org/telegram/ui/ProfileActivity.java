@@ -2176,6 +2176,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     return false;
                 }
             }
+            if (ChatObject.isHiddenBroadcastChannel(currentChat)) {
+                ChannelsDisabledActivity.requestPresentation();
+                return false;
+            }
             if (flagSecure != null) {
                 flagSecure.invalidate();
             }

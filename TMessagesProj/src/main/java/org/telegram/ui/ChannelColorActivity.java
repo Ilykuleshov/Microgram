@@ -257,6 +257,11 @@ public class ChannelColorActivity extends BaseFragment implements NotificationCe
 
     @Override
     public boolean onFragmentCreate() {
+        TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
+        if (ChatObject.isHiddenBroadcastChannel(chat)) {
+            ChannelsDisabledActivity.requestPresentation();
+            return false;
+        }
         getMediaDataController().loadRestrictedStatusEmojis();
         getNotificationCenter().addObserver(this, NotificationCenter.boostByChannelCreated);
         getNotificationCenter().addObserver(this, NotificationCenter.chatWasBoostedByUser);

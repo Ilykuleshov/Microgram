@@ -2,6 +2,9 @@
 <resources>
     <string name="AppName">Microgram</string>
     <string name="AppNameBeta">Microgram Beta</string>
+    <string name="ChannelsDisabledTitle">Channels are disabled!</string>
+    <string name="ChannelsDisabledText">Broadcast channels cannot be opened in Microgram.</string>
+    <string name="LoginConnectionError">Could not reach Telegram. Check your network and try again.</string>
     <string name="LanguageName">English</string>
     <string name="English">English</string>
     <string name="LanguageNameInEnglish">English</string>

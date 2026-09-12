@@ -2741,6 +2741,10 @@ public class ChatActivity extends BaseFragment implements
                     return false;
                 }
             }
+            if (ChatObject.isHiddenBroadcastChannel(currentChat)) {
+                ChannelsDisabledActivity.requestPresentation();
+                return false;
+            }
             if (ChatObject.isMonoForum(currentChat)) {
                 chatMode = MODE_SUGGESTIONS;
                 isSubscriberSuggestions = !ChatObject.canManageMonoForum(currentAccount, currentChat);
